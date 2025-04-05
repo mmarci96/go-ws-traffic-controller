@@ -36,5 +36,6 @@ func NewConfiguration() (*configuration, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error reading config file: %s", err)
 	}
+	fmt.Println("Config loaded...")
 	return Config, nil
 }

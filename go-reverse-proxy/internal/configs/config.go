@@ -17,6 +17,9 @@ type configuration struct {
 		Host        string
 		Listen_port string
 	}
+	Static struct {
+		Dir string
+	}
 	Resources []resource
 }
 

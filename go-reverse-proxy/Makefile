@@ -4,12 +4,12 @@ help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
-## run: starts demo http services
+## run-proxy-server: starts demo http services
 .PHONY: run-proxy-server
 run-proxy-server:
 	go run cmd/main.go
 
-## run: starts demo http services
+## run-containers: starts demo http services
 .PHONY: run-containers
 run-containers:
 	docker run --rm -d -p 9001:80 --name server1 kennethreitz/httpbin

@@ -4,9 +4,27 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/mmarci96/go-ws-traffic-controller/go-reverse-proxy/internal/configs"
 )
+
+type spaHandler struct {
+	staticDir string
+}
+
+func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fs := http.Dir(h.staticDir)
+	path := r.URL.Path
+
+	// Check if requested file exists
+	if _, err := fs.Open(path); os.IsNotExist(err) {
+		// Serve index.html for SPA routing
+		r.URL.Path = "/"
+	}
+
+	http.FileServer(fs).ServeHTTP(w, r)
+}
 
 // Run starts server and listens on defined port
 func Run() error {
@@ -17,8 +35,6 @@ func Run() error {
 	}
 	// Creates a new router
 	mux := http.NewServeMux()
-	// Registering the healthcheck endpoint
-	mux.HandleFunc("/ping", ping)
 	// Iterating through the configuration resource and registering them
 	// into the router.
 	for _, resource := range config.Resources {
@@ -27,6 +43,12 @@ func Run() error {
 		mux.HandleFunc(resource.Endpoint, ProxyRequestHandler(proxy, url, resource.Endpoint))
 	}
 	fmt.Printf("[ TinyRP ] Server running on http://%s:%s\n", config.Server.Host, config.Server.Listen_port)
+	// Registering the healthcheck endpoint
+	mux.HandleFunc("/ping", ping)
+
+	// Setup SPA static file server
+	spa := spaHandler{staticDir: config.Static.Dir}
+	mux.Handle("/", spa)
 
 	// Running proxy server
 	if err := http.ListenAndServe(config.Server.Host+":"+config.Server.Listen_port, mux); err != nil {
